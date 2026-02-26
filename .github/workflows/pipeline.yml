@@ -54,18 +54,20 @@ jobs:
           rm -f vcluster
           vcluster version
 
-      - name: Create and connect vcluster
+      - name: Create vcluster
         run: |
           vcluster create mycluster --driver docker --connect=false
-          echo "Waiting for vcluster to be ready..."
           sleep 20
-          vcluster connect mycluster --print > /tmp/kubeconfig.yaml
-          echo "KUBECONFIG=/tmp/kubeconfig.yaml" >> $GITHUB_ENV
-          cat /tmp/kubeconfig.yaml
 
-      - name: Verify cluster connection
+      - name: Connect and verify vcluster
         run: |
-          kubectl get namespaces
+          vcluster connect mycluster -- kubectl get namespaces
+
+      - name: Setup kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          vcluster connect mycluster --print > ~/.kube/config
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
 
       - name: Install Helm
         uses: azure/setup-helm@v3
@@ -80,7 +82,7 @@ jobs:
 
       - name: Helm deploy
         run: |
-          helm upgrade --install myapp helm/app-chart \
+          vcluster connect mycluster -- helm upgrade --install myapp helm/app-chart \
             --namespace default \
             --set image.repository=${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }} \
             --set image.tag=${{ steps.tag.outputs.IMAGE_TAG }} \
