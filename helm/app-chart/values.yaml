@@ -1,0 +1,27 @@
+image:
+  repository: ghcr.io/aviyasul/devops-challenge
+  tag: "main-latest"
+  pullPolicy: Always
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30080
+
+db:
+  host: "app-chart-mysql"
+  port: "3306"
+  name: "appdb"
+  user: "appuser"
+  password: "apppassword"
+  rootPassword: "rootpassword"
+
+mysql:
+  auth:
+    rootPassword: "rootpassword"
+    database: "appdb"
+    username: "appuser"
+    password: "apppassword"
+  primary:
+    service:
+      type: ClusterIP
