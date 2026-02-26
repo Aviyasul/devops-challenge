@@ -6,7 +6,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-deploy:
@@ -24,6 +23,8 @@ jobs:
         run: |
           BRANCH="${GITHUB_REF_NAME}"
           SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE_NAME_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME_LOWER=${IMAGE_NAME_LOWER}" >> $GITHUB_OUTPUT
           if [ "$BRANCH" = "main" ]; then
             echo "IMAGE_TAG=main-${SHORT_SHA}" >> $GITHUB_OUTPUT
           else
@@ -43,8 +44,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-latest
+            ${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }}:${{ steps.tag.outputs.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }}:${{ github.ref_name }}-latest
 
       - name: Install vind
         run: |
@@ -69,7 +70,7 @@ jobs:
         run: |
           helm upgrade --install myapp helm/app-chart \
             --namespace default \
-            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set image.repository=${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }} \
             --set image.tag=${{ steps.tag.outputs.IMAGE_TAG }} \
             --wait --timeout 5m
 
