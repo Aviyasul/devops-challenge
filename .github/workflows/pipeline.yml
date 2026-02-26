@@ -61,8 +61,10 @@ jobs:
 
       - name: Connect to vcluster
         run: |
-          vcluster connect mycluster --update-current=true &
-          sleep 15
+          vcluster connect mycluster --print > kubeconfig.yaml &
+          sleep 20
+          export KUBECONFIG=$(pwd)/kubeconfig.yaml
+          echo "KUBECONFIG=$(pwd)/kubeconfig.yaml" >> $GITHUB_ENV
           kubectl get namespaces
 
       - name: Install Helm
