@@ -52,6 +52,14 @@ jobs:
         with:
           cluster_name: mycluster
 
+      - name: Create GHCR image pull secret
+        run: |
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --namespace default
+
       - name: Verify cluster
         run: kubectl get namespaces
 
@@ -72,7 +80,8 @@ jobs:
             --namespace default \
             --set image.repository=${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }} \
             --set image.tag=${{ steps.tag.outputs.IMAGE_TAG }} \
-            --wait --timeout 5m
+            --set imagePullSecrets[0].name=ghcr-secret \
+            --wait --timeout 8m
 
       - name: Run smoke test
         run: |
