@@ -47,14 +47,14 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }}:${{ steps.tag.outputs.IMAGE_TAG }}
             ${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }}:${{ github.ref_name }}-latest
 
-      - name: Install vind
+      - name: Install vind (vcluster CLI)
         run: |
-          curl -fsSL https://github.com/loft-sh/vind/releases/latest/download/vind-linux-amd64 \
-            -o /usr/local/bin/vind
-          chmod +x /usr/local/bin/vind
-          vind version
-          vind create mycluster
-          vind use mycluster
+          curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/latest/download/vcluster-linux-amd64"
+          sudo install -c -m 0755 vcluster /usr/local/bin
+          rm -f vcluster
+          vcluster version
+          vcluster create mycluster --driver docker
+          vcluster connect mycluster
 
       - name: Install Helm
         uses: azure/setup-helm@v3
