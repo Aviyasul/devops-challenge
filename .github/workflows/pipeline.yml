@@ -47,27 +47,13 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }}:${{ steps.tag.outputs.IMAGE_TAG }}
             ${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }}:${{ github.ref_name }}-latest
 
-      - name: Install vcluster CLI
-        run: |
-          curl -L -o vcluster "https://github.com/loft-sh/vcluster/releases/latest/download/vcluster-linux-amd64"
-          sudo install -c -m 0755 vcluster /usr/local/bin
-          rm -f vcluster
-          vcluster version
+      - name: Create Kubernetes cluster using kind
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: mycluster
 
-      - name: Create vcluster
-        run: |
-          vcluster create mycluster --driver docker --connect=false
-          sleep 20
-
-      - name: Connect and verify vcluster
-        run: |
-          vcluster connect mycluster -- kubectl get namespaces
-
-      - name: Setup kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          vcluster connect mycluster --print > ~/.kube/config
-          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+      - name: Verify cluster
+        run: kubectl get namespaces
 
       - name: Install Helm
         uses: azure/setup-helm@v3
@@ -82,7 +68,7 @@ jobs:
 
       - name: Helm deploy
         run: |
-          vcluster connect mycluster -- helm upgrade --install myapp helm/app-chart \
+          helm upgrade --install myapp helm/app-chart \
             --namespace default \
             --set image.repository=${{ env.REGISTRY }}/${{ steps.tag.outputs.IMAGE_NAME_LOWER }} \
             --set image.tag=${{ steps.tag.outputs.IMAGE_TAG }} \
