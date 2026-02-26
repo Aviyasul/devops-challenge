@@ -49,9 +49,10 @@ jobs:
 
       - name: Install vind
         run: |
-          curl -L https://github.com/loft-sh/vind/releases/latest/download/vind-linux-amd64 \
+          curl -fsSL https://github.com/loft-sh/vind/releases/latest/download/vind-linux-amd64 \
             -o /usr/local/bin/vind
           chmod +x /usr/local/bin/vind
+          vind version
           vind create mycluster
           vind use mycluster
 
